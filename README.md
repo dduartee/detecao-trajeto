@@ -1,1 +1,1 @@
-# detecao-trajeto
+# deteccao-trajeto
