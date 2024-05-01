@@ -2,6 +2,8 @@ import cv2
 import numpy as np
 #cap = cv2.VideoCapture("./20240426_162822_600x600.mp4")
 cap = cv2.VideoCapture("./162329-600x600.mp4")
+if(cv2.__version__ != '3.4.18'):
+    raise Exception("Versão do OpenCV incompatível. Utilize a versão 3.4.18.65")
 
 def handleHoughLines(input_image, output_image):
     lines = cv2.HoughLinesP(input_image, rho=1, theta=np.pi/180, threshold=100, minLineLength=150, maxLineGap=50)
@@ -103,7 +105,6 @@ while True:
     endHeight = height
     startWidth = int(0)
     endWidth = int(width/2)
-    blank_image = np.zeros((startHeight, width, 3), np.uint8)
     roiEsquerdo = frame[startHeight:endHeight, startWidth:width - endWidth]
     leftAngles = processaLadoEsquerdo(roiEsquerdo)
     roiDireito = frame[startHeight:endHeight, endWidth:width]
