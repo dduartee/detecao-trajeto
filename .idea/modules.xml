@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/.idea/detecao-trajeto.iml" filepath="$PROJECT_DIR$/.idea/detecao-trajeto.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/houghLines.iml" filepath="$PROJECT_DIR$/.idea/houghLines.iml" />
     </modules>
   </component>
 </project>
