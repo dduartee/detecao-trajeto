@@ -16,14 +16,13 @@ def tratarRoi(roi, thresholdDark):
 """
 A representação pode não estar correta, por conta da limitação do seno, sei lá
 """
-def representacaoLinhaAngulo(angle, width, height, output_image, color=(255, 255, 0), finalHeight=0):
+def representacaoLinhaAngulo(angle, width, height, output_image, color=(255, 255, 0)):
     x_inicial = int(width/2)+int(int(width/2) * np.sin(angle)) # cateto oposto
-    y_inicial = int(finalHeight)
+    y_inicial = 0
     x_final = int(width/2) # centro do eixo x
-    y_final = int(height)
+    y_final = height
     cv2.line(output_image, (x_inicial, y_inicial), (x_final, y_final), color, 3)
-    if angle > 0:
-        cv2.putText(output_image, str(round(np.rad2deg(angle), 0)), (int(width/4), int(height/4)), cv2.FONT_HERSHEY_SIMPLEX, 1, color, 2, cv2.LINE_AA)
+    cv2.putText(output_image, str(round(np.rad2deg(angle), 0)), (int(width/4), int(height/4)), cv2.FONT_HERSHEY_SIMPLEX, 1, color, 2, cv2.LINE_AA)
     
 def handleHoughLines(input_image, minHoughLineLengthValue, maxLineGapValue, output_image):
     #cv2.imshow('thresh'+str(minHoughLineLengthValue), input_image)
@@ -51,7 +50,6 @@ def handleHoughLines(input_image, minHoughLineLengthValue, maxLineGapValue, outp
         return None
     ROIwidth, ROIheight = output_image.shape[:2]
     representacaoLinhaAngulo(np.mean(angles), ROIwidth, ROIheight, output_image, color=(0, 255, 0))
-    representacaoLinhaAngulo(0, ROIwidth, ROIheight, output_image, color=(255, 255, 255))
     return np.mean(angles)
 
 def processaLadoEsquerdo(thresh, areaThreshold, output_image):
@@ -103,8 +101,40 @@ def processaLadoEsquerdo(thresh, areaThreshold, output_image):
         return None
     
     representacaoLinhaAngulo(anglesMean, width, height, output_image)
-    representacaoLinhaAngulo(0, width, height, output_image, color=(255, 255, 255))
     return anglesMean
+
+def processaLadoDireito(roiDireito):
+    gray = cv2.cvtColor(roiDireito, cv2.COLOR_BGR2GRAY)
+    blur = cv2.bilateralFilter(gray, 10, 100, 100)
+    threshold1 = 20
+    threshold2 = 100
+    thresholdDark = 150
+    thresh = cv2.threshold(blur, thresholdDark, 255, cv2.THRESH_BINARY)[1]
+    #cv2.imshow('threshDireito', thresh)
+    #thresh = cv2.dilate(thresh, None, iterations=2)
+    edges = cv2.Canny(blur, threshold1, threshold2, apertureSize=3)
+    areaThreshold = 500
+    cnts = cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)[1]
+    cv2.drawContours(roiDireito,cnts,-1,(255,0,255),3)
+    angles = np.array([])
+    for c in cnts:
+        if cv2.contourArea(c) < areaThreshold:
+            continue
+        
+        rect = cv2.minAreaRect(c)
+        box = cv2.boxPoints(rect)
+        box = np.intp(box)
+        cv2.drawContours(roiDireito,[box],0,(0,255,0),2)
+        
+        angle = -90 + rect[2]
+        angle = np.deg2rad(angle)
+        angles = np.append(angles, angle)
+        cv2.putText(roiDireito, str(np.rad2deg(angle)), (int(rect[0][0]), int(rect[0][1])), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2, cv2.LINE_AA)
+        
+        ROIheight, ROIwidth= roiDireito.shape[:2]
+        
+        representacaoLinhaAngulo(angle, ROIwidth, ROIheight, roiDireito)
+    return np.mean(angles)
 
 while True:
     # Capture frame-by-frame
@@ -126,8 +156,8 @@ while True:
     roiEsquerdo = frame[startHeight:endHeight, startWidth:width - endWidth]
     roiDireito = frame[startHeight:endHeight, endWidth:width]
     
-    thresholdDarkEsquerdo = 180 # valores impiricos
-    thresholdDarkDireito = 170 # valores impiricos
+    thresholdDarkEsquerdo = 170 # valores impiricos
+    thresholdDarkDireito = 180 # valores impiricos
     
     threshRoiEsquerdo = tratarRoi(roiEsquerdo, thresholdDarkEsquerdo)
     threshRoiDireito = tratarRoi(roiDireito, thresholdDarkDireito)
