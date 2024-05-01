@@ -105,7 +105,7 @@ def processaLadoEsquerdo(thresh, areaThreshold, output_image):
     representacaoLinhaAngulo(anglesMean, width, height, output_image)
     representacaoLinhaAngulo(0, width, height, output_image, color=(255, 255, 255))
     return anglesMean
-
+lastAngles = [0, 0]
 while True:
     # Capture frame-by-frame
     ret, frame = cap.read()
@@ -139,14 +139,16 @@ while True:
     leftAngles = processaLadoEsquerdo(threshRoiEsquerdo, areaThreshold=1000, output_image=roiEsquerdo) # encontra os angulos usando contornos
     rightAngles = handleHoughLines(threshRoiDireito, minHoughLineLengthValue=150, maxLineGapValue=20, output_image=roiDireito) # encontra os angulos usando houghlines
     
+    if(leftAngles != None): lastAngles[0] = leftAngles
+    if(rightAngles != None): lastAngles[1] = rightAngles
     # caso não há nenhum angulo encontrado, o valor é None
-    if(leftAngles != None and rightAngles != None): 
-        angulo = leftAngles + rightAngles
-        representacaoLinhaAngulo(leftAngles, width/2, height, clean, color=(0, 255, 255))
-        representacaoLinhaAngulo(rightAngles, width*2, height, clean, color=(255, 255, 0)) 
+
+    angulo = lastAngles[0] + lastAngles[1]
+    representacaoLinhaAngulo(lastAngles[0], width/2, height, clean, color=(0, 255, 255))
+    representacaoLinhaAngulo(lastAngles[1], width*2, height, clean, color=(255, 255, 0)) 
         
-        representacaoLinhaAngulo(angulo, width, height, clean, color=(255, 0, 255)) # linha de direção
-        representacaoLinhaAngulo(0, width, height, clean, color=(255, 255, 255)) # linha de referencia
+    representacaoLinhaAngulo(angulo, width, height, clean, color=(255, 0, 255)) # linha de direção
+    representacaoLinhaAngulo(0, width, height, clean, color=(255, 255, 255)) # linha de referencia
         
     # exibição das imagens
     cv2.imshow('clean', clean)
